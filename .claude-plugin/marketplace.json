@@ -1,10 +1,10 @@
 {
-  "name": "openai-codex",
+  "name": "gpt-plugin-cc",
   "owner": {
     "name": "OpenAI"
   },
   "metadata": {
-    "description": "Codex plugins to use in Claude Code for delegation and code review.",
+    "description": "GPT-powered plugins for Claude Code: Codex and Copilot delegation and code review.",
     "version": "1.0.4"
   },
   "plugins": [
@@ -16,6 +16,15 @@
         "name": "OpenAI"
       },
       "source": "./plugins/codex"
+    },
+    {
+      "name": "copilot",
+      "description": "Use GitHub Copilot from Claude Code to review code or delegate tasks.",
+      "version": "1.0.0",
+      "author": {
+        "name": "GitHub"
+      },
+      "source": "./plugins/copilot"
     }
   ]
 }
