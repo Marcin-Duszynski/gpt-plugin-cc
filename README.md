@@ -1,23 +1,30 @@
-# Codex plugin for Claude Code
+# GPT plugins for Claude Code
 
-Use Codex from inside Claude Code for code reviews or to delegate tasks to Codex.
+Use Codex or GitHub Copilot from inside Claude Code for code reviews or to delegate tasks.
 
-This plugin is for Claude Code users who want an easy way to start using Codex from the workflow
-they already have.
+These plugins are for Claude Code users who want an easy way to start using Codex or Copilot from the workflow they already have.
 
 <video src="./docs/plugin-demo.webm" controls muted playsinline autoplay></video>
 
 ## What You Get
 
+### Codex plugin
+
 - `/codex:review` for a normal read-only Codex review
 - `/codex:adversarial-review` for a steerable challenge review
 - `/codex:rescue`, `/codex:status`, `/codex:result`, and `/codex:cancel` to delegate work and manage background jobs
 
+### Copilot plugin
+
+- `/copilot:review` for a normal read-only Copilot review
+- `/copilot:adversarial-review` for a steerable challenge review
+- `/copilot:rescue`, `/copilot:status`, `/copilot:result`, and `/copilot:cancel` to delegate work and manage background jobs
+
 ## Requirements
 
-- **ChatGPT subscription (incl. Free) or OpenAI API key.**
-  - Usage will contribute to your Codex usage limits. [Learn more](https://developers.openai.com/codex/pricing).
 - **Node.js 18.18 or later**
+- **For Codex:** ChatGPT subscription (incl. Free) or OpenAI API key. Usage will contribute to your Codex usage limits. [Learn more](https://developers.openai.com/codex/pricing).
+- **For Copilot:** GitHub Copilot CLI installed and authenticated.
 
 ## Install
 
@@ -27,10 +34,11 @@ Add the marketplace in Claude Code:
 /plugin marketplace add openai/codex-plugin-cc
 ```
 
-Install the plugin:
+Install the plugin(s) you want:
 
 ```bash
-/plugin install codex@openai-codex
+/plugin install codex@gpt-plugin-cc
+/plugin install copilot@gpt-plugin-cc
 ```
 
 Reload plugins:
@@ -39,11 +47,14 @@ Reload plugins:
 /reload-plugins
 ```
 
-Then run:
+Then run setup for the plugin(s) you installed:
 
 ```bash
 /codex:setup
+/copilot:setup
 ```
+
+### Codex setup
 
 `/codex:setup` will tell you whether Codex is ready. If Codex is missing and npm is available, it can offer to install Codex for you.
 
@@ -59,10 +70,14 @@ If Codex is installed but not logged in yet, run:
 !codex login
 ```
 
+### Copilot setup
+
+`/copilot:setup` will tell you whether the Copilot CLI is ready. If Copilot is missing, it will direct you to the installation page.
+
 After install, you should see:
 
 - the slash commands listed below
-- the `codex:codex-rescue` subagent in `/agents`
+- the `codex:codex-rescue` and/or `copilot:copilot-rescue` subagent(s) in `/agents`
 
 One simple first run is:
 
@@ -72,11 +87,21 @@ One simple first run is:
 /codex:result
 ```
 
+Or with Copilot:
+
+```bash
+/copilot:review --background
+/copilot:status
+/copilot:result
+```
+
 ## Usage
 
-### `/codex:review`
+Both plugins share the same command structure. Replace `/codex:` with `/copilot:` to use Copilot instead of Codex. The examples below use `/codex:` but apply equally to `/copilot:`.
 
-Runs a normal Codex review on your current work. It gives you the same quality of code review as running `/review` inside Codex directly.
+### `/codex:review` · `/copilot:review`
+
+Runs a normal code review on your current work.
 
 > [!NOTE]
 > Code review especially for multi-file changes might take a while. It's generally recommended to run it in the background.
@@ -86,7 +111,7 @@ Use it when you want:
 - a review of your current uncommitted changes
 - a review of your branch compared to a base branch like `main`
 
-Use `--base <ref>` for branch review. It also supports `--wait` and `--background`. It is not steerable and does not take custom focus text. Use [`/codex:adversarial-review`](#codexadversarial-review) when you want to challenge a specific decision or risk area.
+Use `--base <ref>` for branch review. It also supports `--wait` and `--background`. It is not steerable and does not take custom focus text. Use the adversarial review command when you want to challenge a specific decision or risk area.
 
 Examples:
 
@@ -96,16 +121,16 @@ Examples:
 /codex:review --background
 ```
 
-This command is read-only and will not perform any changes. When run in the background you can use [`/codex:status`](#codexstatus) to check on the progress and [`/codex:cancel`](#codexcancel) to cancel the ongoing task.
+This command is read-only and will not perform any changes. When run in the background you can use the status command to check on the progress and the cancel command to cancel the ongoing task.
 
-### `/codex:adversarial-review`
+### `/codex:adversarial-review` · `/copilot:adversarial-review`
 
 Runs a **steerable** review that questions the chosen implementation and design.
 
 It can be used to pressure-test assumptions, tradeoffs, failure modes, and whether a different approach would have been safer or simpler.
 
-It uses the same review target selection as `/codex:review`, including `--base <ref>` for branch review.
-It also supports `--wait` and `--background`. Unlike `/codex:review`, it can take extra focus text after the flags.
+It uses the same review target selection as the review command, including `--base <ref>` for branch review.
+It also supports `--wait` and `--background`. Unlike the review command, it can take extra focus text after the flags.
 
 Use it when you want:
 
@@ -123,15 +148,15 @@ Examples:
 
 This command is read-only. It does not fix code.
 
-### `/codex:rescue`
+### `/codex:rescue` · `/copilot:rescue`
 
-Hands a task to Codex through the `codex:codex-rescue` subagent.
+Hands a task to the rescue subagent.
 
-Use it when you want Codex to:
+Use it when you want to:
 
 - investigate a bug
 - try a fix
-- continue a previous Codex task
+- continue a previous task
 - take a faster or cheaper pass with a smaller model
 
 > [!NOTE]
@@ -146,11 +171,10 @@ Examples:
 /codex:rescue fix the failing test with the smallest safe patch
 /codex:rescue --resume apply the top fix from the last run
 /codex:rescue --model gpt-5.4-mini --effort medium investigate the flaky integration test
-/codex:rescue --model spark fix the issue quickly
 /codex:rescue --background investigate the regression
 ```
 
-You can also just ask for a task to be delegated to Codex:
+You can also just ask for a task to be delegated:
 
 ```text
 Ask Codex to redesign the database connection to be more resilient.
@@ -158,13 +182,15 @@ Ask Codex to redesign the database connection to be more resilient.
 
 **Notes:**
 
-- if you do not pass `--model` or `--effort`, Codex chooses its own defaults.
-- if you say `spark`, the plugin maps that to `gpt-5.3-codex-spark`
-- follow-up rescue requests can continue the latest Codex task in the repo
+- if you do not pass `--model` or `--effort`, the underlying CLI chooses its own defaults
+- **Codex:** if you say `spark`, the plugin maps that to `gpt-5.3-codex-spark`
+- **Codex effort levels:** `none`, `minimal`, `low`, `medium`, `high`, `xhigh`
+- **Copilot effort levels:** `low`, `medium`, `high`, `xhigh`
+- follow-up rescue requests can continue the latest task in the repo
 
-### `/codex:status`
+### `/codex:status` · `/copilot:status`
 
-Shows running and recent Codex jobs for the current repository.
+Shows running and recent jobs for the current repository.
 
 Examples:
 
@@ -179,10 +205,10 @@ Use it to:
 - see the latest completed job
 - confirm whether a task is still running
 
-### `/codex:result`
+### `/codex:result` · `/copilot:result`
 
-Shows the final stored Codex output for a finished job.
-When available, it also includes the Codex session ID so you can reopen that run directly in Codex with `codex resume <session-id>`.
+Shows the final stored output for a finished job.
+When available, it also includes the session ID so you can reopen that run directly.
 
 Examples:
 
@@ -191,9 +217,9 @@ Examples:
 /codex:result task-abc123
 ```
 
-### `/codex:cancel`
+### `/codex:cancel` · `/copilot:cancel`
 
-Cancels an active background Codex job.
+Cancels an active background job.
 
 Examples:
 
@@ -202,12 +228,11 @@ Examples:
 /codex:cancel task-abc123
 ```
 
-### `/codex:setup`
+### `/codex:setup` · `/copilot:setup`
 
-Checks whether Codex is installed and authenticated.
-If Codex is missing and npm is available, it can offer to install Codex for you.
+Checks whether the CLI is installed and authenticated.
 
-You can also use `/codex:setup` to manage the optional review gate.
+You can also use setup to manage the optional review gate.
 
 #### Enabling review gate
 
@@ -216,10 +241,10 @@ You can also use `/codex:setup` to manage the optional review gate.
 /codex:setup --disable-review-gate
 ```
 
-When the review gate is enabled, the plugin uses a `Stop` hook to run a targeted Codex review based on Claude's response. If that review finds issues, the stop is blocked so Claude can address them first.
+When the review gate is enabled, the plugin uses a `Stop` hook to run a targeted review based on Claude's response. If that review finds issues, the stop is blocked so Claude can address them first.
 
 > [!WARNING]
-> The review gate can create a long-running Claude/Codex loop and may drain usage limits quickly. Only enable it when you plan to actively monitor the session.
+> The review gate can create a long-running Claude/CLI loop and may drain usage limits quickly. Only enable it when you plan to actively monitor the session.
 
 ## Typical Flows
 
@@ -229,7 +254,7 @@ When the review gate is enabled, the plugin uses a `Stop` hook to run a targeted
 /codex:review
 ```
 
-### Hand A Problem To Codex
+### Hand A Problem Over
 
 ```bash
 /codex:rescue investigate why the build is failing in CI
@@ -272,9 +297,33 @@ Check out the Codex docs for more [configuration options](https://developers.ope
 
 ### Moving The Work Over To Codex
 
-Delegated tasks and any [stop gate](#what-does-the-review-gate-do) run can also be directly resumed inside Codex by running `codex resume` either with the specific session ID you received from running `/codex:result` or `/codex:status` or by selecting it from the list.
+Delegated tasks and any [stop gate](#enabling-review-gate) run can also be directly resumed inside Codex by running `codex resume` either with the specific session ID you received from running `/codex:result` or `/codex:status` or by selecting it from the list.
 
 This way you can review the Codex work or continue the work there.
+
+## Copilot Integration
+
+The Copilot plugin invokes the `copilot` CLI directly for each command. It does not use a persistent server or broker — each review or task spawns a fresh `copilot` process.
+
+### Common Configurations
+
+Copilot CLI reads persistent settings from `~/.copilot/config.json`. Notable keys:
+
+| Key | Default | Notes |
+|---|---|---|
+| `model` | — | Default model for all sessions |
+| `autoUpdate` | `true` | Auto-download CLI updates |
+| `stream` | `true` | Streaming output |
+
+### Session Resume
+
+When a Copilot task finishes, the session ID is stored in the job record. You can resume it directly with:
+
+```bash
+copilot --resume=<session-id>
+```
+
+Or use `--resume` with `/copilot:rescue` to continue from the latest task.
 
 ## FAQ
 
@@ -284,22 +333,24 @@ If you are already signed into Codex on this machine, that account should work i
 
 If you only use Claude Code today and have not used Codex yet, you will also need to sign in to Codex with either a ChatGPT account or an API key. [Codex is available with your ChatGPT subscription](https://developers.openai.com/codex/pricing/), and [`codex login`](https://developers.openai.com/codex/cli/reference/#codex-login) supports both ChatGPT and API key sign-in. Run `/codex:setup` to check whether Codex is ready, and use `!codex login` if it is not.
 
-### Does the plugin use a separate Codex runtime?
+### Does the plugin use a separate runtime?
 
-No. This plugin delegates through your local [Codex CLI](https://developers.openai.com/codex/cli/) and [Codex app server](https://developers.openai.com/codex/app-server/) on the same machine.
+**Codex:** No. The plugin delegates through your local [Codex CLI](https://developers.openai.com/codex/cli/) and [Codex app server](https://developers.openai.com/codex/app-server/) on the same machine.
 
-That means:
+**Copilot:** No. The plugin invokes your local `copilot` CLI directly.
 
-- it uses the same Codex install you would use directly
+That means for both:
+
+- it uses the same CLI install you would use directly
 - it uses the same local authentication state
 - it uses the same repository checkout and machine-local environment
 
-### Will it use the same Codex config I already have?
+### Will it use the same config I already have?
 
-Yes. If you already use Codex, the plugin picks up the same [configuration](#common-configurations).
+Yes. Both plugins pick up the same configuration as the underlying CLI. See [Codex Integration](#codex-integration) and [Copilot Integration](#copilot-integration) for details.
 
 ### Can I keep using my current API key or base URL setup?
 
-Yes. Because the plugin uses your local Codex CLI, your existing sign-in method and config still apply.
+Yes. Because the plugins use your local CLIs, your existing sign-in method and config still apply.
 
-If you need to point the built-in OpenAI provider at a different endpoint, set `openai_base_url` in your [Codex config](https://developers.openai.com/codex/config-advanced/#config-and-state-locations).
+For Codex, if you need to point the built-in OpenAI provider at a different endpoint, set `openai_base_url` in your [Codex config](https://developers.openai.com/codex/config-advanced/#config-and-state-locations).
