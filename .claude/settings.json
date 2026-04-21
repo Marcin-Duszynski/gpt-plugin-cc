@@ -38,9 +38,8 @@
     "pyright-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
     "security-guidance@claude-code-plugins": true,
-    "skill-copilot@cc-marketplace": false,
-    "codex@gpt-plugins": false,
-    "copilot@gpt-plugins": false,
+    "copilot@gpt-plugin-cc": true,
+    "codex@gpt-plugin-cc": false,
     "skill-creator@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
@@ -48,12 +47,6 @@
       "source": {
         "source": "github",
         "repo": "Yeachan-Heo/oh-my-claudecode"
-      }
-    },
-    "cc-marketplace": {
-      "source": {
-        "source": "github",
-        "repo": "Marcin-Duszynski/cc-marketplace"
       }
     },
     "claude-code-plugins": {
