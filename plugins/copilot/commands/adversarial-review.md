@@ -2,7 +2,7 @@
 description: Run a Copilot review that challenges the implementation approach and design choices
 argument-hint: '[--wait|--background] [--base <ref>] [--scope auto|working-tree|branch] [focus ...]'
 disable-model-invocation: true
-allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), AskUserQuestion
+allowed-tools: Bash(git:*), AskUserQuestion, Agent
 ---
 
 Run an adversarial Copilot review through the shared plugin runtime.
@@ -38,29 +38,17 @@ Argument handling:
 - Preserve the user's arguments exactly.
 - Do not strip `--wait` or `--background` yourself.
 - Do not weaken the adversarial framing or rewrite the user's focus text.
-- The companion script parses `--wait` and `--background`, but Claude Code's `Bash(..., run_in_background: true)` is what actually detaches the run.
 - `/copilot:adversarial-review` uses the same review target selection as `/copilot:review`.
 - It supports working-tree review, branch review, and `--base <ref>`.
 - It does not support `--scope staged` or `--scope unstaged`.
 - Unlike `/copilot:review`, it can still take extra focus text after the flags.
 
 Foreground flow:
-- Run:
-```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/copilot-companion.mjs" adversarial-review "$ARGUMENTS"
-```
-- Return the command stdout verbatim, exactly as-is.
+- Invoke the `copilot:copilot-adversarial-review` subagent via the `Agent` tool (`subagent_type: "copilot:copilot-adversarial-review"`), forwarding the raw arguments as the prompt.
+- Return the subagent's output verbatim, exactly as-is.
 - Do not paraphrase, summarize, or add commentary before or after it.
 - Do not fix any issues mentioned in the review output.
 
 Background flow:
-- Launch the review with `Bash` in the background:
-```typescript
-Bash({
-  command: `node "${CLAUDE_PLUGIN_ROOT}/scripts/copilot-companion.mjs" adversarial-review "$ARGUMENTS"`,
-  description: "Copilot adversarial review",
-  run_in_background: true
-})
-```
-- Do not call `BashOutput` or wait for completion in this turn.
-- After launching the command, tell the user: "Copilot adversarial review started in the background. Check `/copilot:status` for progress."
+- Invoke the `copilot:copilot-adversarial-review` subagent via the `Agent` tool with `run_in_background: true`, forwarding the raw arguments as the prompt.
+- After launching, tell the user: "Copilot adversarial review started in the background. You will be notified when it completes."

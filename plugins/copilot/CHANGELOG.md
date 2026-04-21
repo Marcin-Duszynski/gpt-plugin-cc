@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0
+
+- Add dedicated `copilot-review` and `copilot-adversarial-review` subagents for review delegation
+- Route `/copilot:review` and `/copilot:adversarial-review` through subagents via the `Agent` tool instead of direct Bash invocations
+
 ## 1.3.0
 
 - Remove legacy CLI fallback; Copilot CLI with `--acp` support is now required

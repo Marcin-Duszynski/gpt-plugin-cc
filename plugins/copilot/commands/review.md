@@ -2,7 +2,7 @@
 description: Run a Copilot code review against local git state
 argument-hint: '[--wait|--background] [--base <ref>] [--scope auto|working-tree|branch]'
 disable-model-invocation: true
-allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), AskUserQuestion
+allowed-tools: Bash(git:*), AskUserQuestion, Agent
 ---
 
 Run a Copilot review against local git changes.
@@ -35,27 +35,15 @@ Argument handling:
 - Preserve the user's arguments exactly.
 - Do not strip `--wait` or `--background` yourself.
 - Do not add extra review instructions or rewrite the user's intent.
-- The companion script parses `--wait` and `--background`, but Claude Code's `Bash(..., run_in_background: true)` is what actually detaches the run.
 - `/copilot:review` is native-review only. It does not support staged-only review, unstaged-only review, or extra focus text.
 - If the user needs custom review instructions or more adversarial framing, they should use `/copilot:adversarial-review`.
 
 Foreground flow:
-- Run:
-```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/copilot-companion.mjs" review "$ARGUMENTS"
-```
-- Return the command stdout verbatim, exactly as-is.
+- Invoke the `copilot:copilot-review` subagent via the `Agent` tool (`subagent_type: "copilot:copilot-review"`), forwarding the raw arguments as the prompt.
+- Return the subagent's output verbatim, exactly as-is.
 - Do not paraphrase, summarize, or add commentary before or after it.
 - Do not fix any issues mentioned in the review output.
 
 Background flow:
-- Launch the review with `Bash` in the background:
-```typescript
-Bash({
-  command: `node "${CLAUDE_PLUGIN_ROOT}/scripts/copilot-companion.mjs" review "$ARGUMENTS"`,
-  description: "Copilot review",
-  run_in_background: true
-})
-```
-- Do not call `BashOutput` or wait for completion in this turn.
-- After launching the command, tell the user: "Copilot review started in the background. Check `/copilot:status` for progress."
+- Invoke the `copilot:copilot-review` subagent via the `Agent` tool with `run_in_background: true`, forwarding the raw arguments as the prompt.
+- After launching, tell the user: "Copilot review started in the background. You will be notified when it completes."
