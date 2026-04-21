@@ -528,7 +528,7 @@ function requireTaskRequest(prompt, resumeLast) {
 async function runForegroundCommand(job, runner, options = {}) {
   const { logFile, progress } = createTrackedProgress(job, {
     logFile: options.logFile,
-    stderr: !options.json
+    stderr: !options.json && !options.quietProgress
   });
   const execution = await runTrackedJob(job, () => runner(progress), { logFile });
   outputResult(options.json ? execution.payload : execution.rendered, options.json);
@@ -606,7 +606,7 @@ async function handleReviewCommand(argv, config) {
         reviewName: config.reviewName,
         onProgress: progress
       }),
-    { json: options.json }
+    { json: options.json, quietProgress: config.quietProgress }
   );
 }
 
@@ -761,7 +761,7 @@ async function main() {
   switch (subcommand) {
     case "setup": await handleSetup(argv); break;
     case "review": await handleReview(argv); break;
-    case "adversarial-review": await handleReviewCommand(argv, { reviewName: "Adversarial Review" }); break;
+    case "adversarial-review": await handleReviewCommand(argv, { reviewName: "Adversarial Review", quietProgress: true }); break;
     case "task": await handleTask(argv); break;
     case "task-worker": await handleTaskWorker(argv); break;
     case "status": await handleStatus(argv); break;

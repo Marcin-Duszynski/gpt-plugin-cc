@@ -137,6 +137,15 @@ export function runCopilotSync(cwd, options = {}) {
   };
 }
 
+function isEphemeralEvent(line) {
+  if (!line.startsWith("{")) return false;
+  try {
+    return JSON.parse(line).ephemeral === true;
+  } catch {
+    return false;
+  }
+}
+
 export async function runCopilotAsync(cwd, options = {}) {
   const args = buildCopilotArgs(options);
 
@@ -156,7 +165,9 @@ export async function runCopilotAsync(cwd, options = {}) {
       if (options.onProgress) {
         const lines = chunk.toString().split(/\r?\n/).filter(Boolean);
         for (const line of lines) {
-          options.onProgress({ message: line, phase: "running" });
+          if (!isEphemeralEvent(line)) {
+            options.onProgress({ message: line, phase: "running" });
+          }
         }
       }
     });

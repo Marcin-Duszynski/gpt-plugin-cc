@@ -15,3 +15,5 @@ If the user did not pass a job ID:
 If the user did pass a job ID:
 - Present the full command output to the user.
 - Do not summarize or condense it.
+
+If the output includes a `Log:` path and the user asks for more detail or something looks wrong, read the log file for additional diagnostic context.
