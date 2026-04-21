@@ -39,7 +39,7 @@
     "typescript-lsp@claude-plugins-official": true,
     "security-guidance@claude-code-plugins": true,
     "copilot@gpt-plugin-cc": true,
-    "codex@gpt-plugin-cc": false,
+    "codex@gpt-plugin-cc": true,
     "skill-creator@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
