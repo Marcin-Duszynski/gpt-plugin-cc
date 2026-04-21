@@ -204,12 +204,14 @@ async function handleSetup(argv) {
 
 function buildAdversarialReviewPrompt(context, focusText) {
   const template = loadPromptTemplate(ROOT_DIR, "adversarial-review");
+  const schema = fs.readFileSync(REVIEW_SCHEMA, "utf8").trim();
   return interpolateTemplate(template, {
     REVIEW_KIND: "Adversarial Review",
     TARGET_LABEL: context.target.label,
     USER_FOCUS: focusText || "No extra focus provided.",
     REVIEW_COLLECTION_GUIDANCE: context.collectionGuidance,
-    REVIEW_INPUT: context.content
+    REVIEW_INPUT: context.content,
+    REVIEW_SCHEMA: schema
   });
 }
 

@@ -99,10 +99,19 @@ function extractAssistantMessage(jsonlOutput) {
   }
   const lines = jsonlOutput.split(/\r?\n/).filter(Boolean);
   const messages = [];
+  let finalAnswer = null;
   for (const line of lines) {
     try {
       const obj = JSON.parse(line);
-      if (obj.type === "assistant" || obj.role === "assistant") {
+      if (obj.type === "assistant.message") {
+        const text = obj.data?.content ?? "";
+        if (text) {
+          if (obj.data?.phase === "final_answer") {
+            finalAnswer = text;
+          }
+          messages.push(text);
+        }
+      } else if (obj.type === "assistant" || obj.role === "assistant") {
         const text = obj.content ?? obj.text ?? obj.message ?? "";
         if (text) {
           messages.push(text);
@@ -111,6 +120,9 @@ function extractAssistantMessage(jsonlOutput) {
     } catch {
       continue;
     }
+  }
+  if (finalAnswer) {
+    return finalAnswer;
   }
   return messages.length > 0 ? messages[messages.length - 1] : jsonlOutput;
 }
@@ -259,6 +271,19 @@ export function parseStructuredOutput(rawOutput, fallback = {}) {
       ...fallback
     };
   } catch (error) {
+    const jsonMatch = rawOutput.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        return {
+          parsed: JSON.parse(jsonMatch[0]),
+          parseError: null,
+          rawOutput,
+          ...fallback
+        };
+      } catch {
+        // fall through to original error
+      }
+    }
     return {
       parsed: null,
       parseError: error.message,
