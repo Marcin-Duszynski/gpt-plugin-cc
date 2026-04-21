@@ -158,7 +158,7 @@ async function buildSetupReport(cwd, actionsTaken = []) {
 
   const nextSteps = [];
   if (!copilotStatus.available) {
-    nextSteps.push("Install the Copilot CLI from https://githubnext.com/projects/copilot-cli.");
+    nextSteps.push("Install the Copilot CLI from https://github.com/features/copilot/cli.");
   }
   if (!config.stopReviewGate) {
     nextSteps.push("Optional: run `/copilot:setup --enable-review-gate` to require a fresh review before stop.");
@@ -216,7 +216,7 @@ function buildAdversarialReviewPrompt(context, focusText) {
 function ensureCopilotAvailable(cwd) {
   const availability = getCopilotAvailability(cwd);
   if (!availability.available) {
-    throw new Error("Copilot CLI is not installed. Install it from https://githubnext.com/projects/copilot-cli, then rerun `/copilot:setup`.");
+    throw new Error("Copilot CLI is not installed. Install it from https://github.com/features/copilot/cli, then rerun `/copilot:setup`.");
   }
 }
 

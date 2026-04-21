@@ -185,13 +185,13 @@ export async function runCopilotAsync(cwd, options = {}) {
 export async function runCopilotReview(cwd, options = {}) {
   const availability = getCopilotAvailability(cwd);
   if (!availability.available) {
-    throw new Error("Copilot CLI is not installed. Install it from https://githubnext.com/projects/copilot-cli, then rerun `/copilot:setup`.");
+    throw new Error("Copilot CLI is not installed. Install it from https://github.com/features/copilot/cli, then rerun `/copilot:setup`.");
   }
 
   return runCopilotAsync(cwd, {
     prompt: options.prompt,
-    model: options.model,
-    effort: options.effort,
+    model: "gpt-5.4",
+    effort: "xhigh",
     allowTools: ["shell(git:*)"],
     allowAllPaths: true,
     outputFormat: options.structured ? "json" : undefined,
@@ -202,7 +202,7 @@ export async function runCopilotReview(cwd, options = {}) {
 export async function runCopilotTask(cwd, options = {}) {
   const availability = getCopilotAvailability(cwd);
   if (!availability.available) {
-    throw new Error("Copilot CLI is not installed. Install it from https://githubnext.com/projects/copilot-cli, then rerun `/copilot:setup`.");
+    throw new Error("Copilot CLI is not installed. Install it from https://github.com/features/copilot/cli, then rerun `/copilot:setup`.");
   }
 
   const copilotOptions = {
