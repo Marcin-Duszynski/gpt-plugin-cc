@@ -613,7 +613,7 @@ async function handleReviewCommand(argv, config) {
 }
 
 async function handleReview(argv) {
-  return handleReviewCommand(argv, { reviewName: "Review", validateRequest: validateNativeReviewRequest });
+  return handleReviewCommand(argv, { reviewName: "Review", validateRequest: validateNativeReviewRequest, quietProgress: true });
 }
 
 async function handleTask(argv) {

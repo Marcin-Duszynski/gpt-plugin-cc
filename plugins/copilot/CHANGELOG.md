@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.3
+
+- Fix `/copilot:review` no longer emits `[copilot]` progress lines; only the final result is printed to stdout
+
 ## 1.1.2
 
 - Fix adversarial review JSON extraction: handle `assistant.message` NDJSON events and prefer `final_answer` phase content
