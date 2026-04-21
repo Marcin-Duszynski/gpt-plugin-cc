@@ -1,7 +1,85 @@
-import { spawn as spawnProcess } from "node:child_process";
 import process from "node:process";
 
-import { binaryAvailable, runCommand } from "./process.mjs";
+import { AcpClient, buildAcpCliArgs, ACP_MODE_AUTOPILOT } from "./acp.mjs";
+import { binaryAvailable } from "./process.mjs";
+
+async function runCopilotAcp(cwd, options = {}) {
+  const cliArgs = buildAcpCliArgs({
+    model: options.model,
+    effort: options.effort,
+    allowAll: options.allowAll,
+    allowAllTools: options.allowAllTools,
+    allowAllPaths: options.allowAllPaths,
+    allowTools: options.allowTools,
+  });
+
+  const client = new AcpClient(cliArgs, { cwd, env: options.env ?? process.env });
+
+  try {
+    await client.initialize();
+
+    let sessionId;
+    if (options.resumeSessionId) {
+      await client.loadSession(options.resumeSessionId, { cwd });
+      sessionId = options.resumeSessionId;
+    } else if (options.continueSession) {
+      const sessions = await client.listSessions();
+      const recent = sessions.find((s) => s.cwd === cwd);
+      if (recent) {
+        await client.loadSession(recent.sessionId, { cwd });
+        sessionId = recent.sessionId;
+      } else {
+        const session = await client.newSession({ cwd });
+        sessionId = session.sessionId;
+      }
+    } else {
+      const session = await client.newSession({ cwd });
+      sessionId = session.sessionId;
+    }
+
+    if (options.autopilot) {
+      await client.setMode(sessionId, ACP_MODE_AUTOPILOT);
+    }
+
+    const result = await client.prompt(sessionId, options.prompt, {
+      onUpdate: (update) => {
+        if (!options.onProgress) return;
+        const type = update?.sessionUpdate;
+        if (type === "agent_message_chunk") {
+          options.onProgress({ message: update.content?.text ?? "", phase: "running" });
+        } else if (type === "tool_call") {
+          options.onProgress({ message: update.title ?? "Tool call", phase: "tool-call" });
+        } else if (type === "tool_call_update") {
+          options.onProgress({ message: `Tool ${update.status}`, phase: "running" });
+        } else if (type === "agent_thought_chunk") {
+          options.onProgress({ message: update.content?.text ?? "", phase: "thinking" });
+        }
+      },
+    });
+
+    return {
+      status: 0,
+      stdout: result.message,
+      stderr: "",
+      finalMessage: result.message,
+      sessionId,
+      error: null,
+      pid: client.pid,
+    };
+  } catch (err) {
+    return {
+      status: 1,
+      stdout: "",
+      stderr: err.message,
+      finalMessage: "",
+      sessionId: null,
+      error: err,
+      pid: client.pid,
+    };
+  } finally {
+    await client.close();
+  }
+}
 
 export function getCopilotAvailability(cwd) {
   return binaryAvailable("copilot", ["--version"], { cwd });
@@ -26,199 +104,19 @@ export function getCopilotAuthStatus(cwd) {
   };
 }
 
-function buildCopilotArgs(options = {}) {
-  const args = ["-s"];
-
-  if (options.model) {
-    args.push("--model", options.model);
-  }
-  if (options.effort) {
-    args.push("--effort", options.effort);
-  }
-  if (options.outputFormat) {
-    args.push("--output-format", options.outputFormat);
-  }
-  if (options.resumeSessionId) {
-    args.push(`--resume=${options.resumeSessionId}`);
-  }
-  if (options.continueSession) {
-    args.push("--continue");
-  }
-  if (options.autopilot) {
-    args.push("--autopilot");
-  }
-  if (options.allowAllTools) {
-    args.push("--allow-all-tools");
-  }
-  if (options.allowAllPaths) {
-    args.push("--allow-all-paths");
-  }
-  if (options.allowAll) {
-    args.push("--allow-all");
-  }
-  if (Array.isArray(options.allowTools)) {
-    for (const tool of options.allowTools) {
-      args.push(`--allow-tool=${tool}`);
-    }
-  }
-
-  if (options.prompt) {
-    args.push("-p", options.prompt);
-  }
-
-  return args;
-}
-
-function tryExtractSessionId(jsonlOutput) {
-  if (!jsonlOutput) {
-    return null;
-  }
-  const lines = jsonlOutput.split(/\r?\n/).filter(Boolean);
-  for (let i = lines.length - 1; i >= 0; i--) {
-    try {
-      const obj = JSON.parse(lines[i]);
-      if (obj.session_id) {
-        return obj.session_id;
-      }
-      if (obj.sessionId) {
-        return obj.sessionId;
-      }
-      if (obj.id && obj.type === "session") {
-        return obj.id;
-      }
-    } catch {
-      continue;
-    }
-  }
-  return null;
-}
-
-function extractAssistantMessage(jsonlOutput) {
-  if (!jsonlOutput) {
-    return "";
-  }
-  const lines = jsonlOutput.split(/\r?\n/).filter(Boolean);
-  const messages = [];
-  let finalAnswer = null;
-  for (const line of lines) {
-    try {
-      const obj = JSON.parse(line);
-      if (obj.type === "assistant.message") {
-        const text = obj.data?.content ?? "";
-        if (text) {
-          if (obj.data?.phase === "final_answer") {
-            finalAnswer = text;
-          }
-          messages.push(text);
-        }
-      } else if (obj.type === "assistant" || obj.role === "assistant") {
-        const text = obj.content ?? obj.text ?? obj.message ?? "";
-        if (text) {
-          messages.push(text);
-        }
-      }
-    } catch {
-      continue;
-    }
-  }
-  if (finalAnswer) {
-    return finalAnswer;
-  }
-  return messages.length > 0 ? messages[messages.length - 1] : jsonlOutput;
-}
-
-export function runCopilotSync(cwd, options = {}) {
-  const args = buildCopilotArgs(options);
-  const result = runCommand("copilot", args, {
-    cwd,
-    maxBuffer: options.maxBuffer ?? 10 * 1024 * 1024
-  });
-
-  const stdout = result.stdout ?? "";
-  const stderr = result.stderr ?? "";
-  const sessionId = options.outputFormat === "json" ? tryExtractSessionId(stdout) : null;
-  const finalMessage = options.outputFormat === "json" ? extractAssistantMessage(stdout) : stdout;
-
-  return {
-    status: result.status ?? 0,
-    stdout,
-    stderr,
-    finalMessage,
-    sessionId,
-    error: result.error
-  };
-}
-
-function isEphemeralEvent(line) {
-  if (!line.startsWith("{")) return false;
-  try {
-    return JSON.parse(line).ephemeral === true;
-  } catch {
-    return false;
-  }
-}
-
-export async function runCopilotAsync(cwd, options = {}) {
-  const args = buildCopilotArgs(options);
-
-  return new Promise((resolve, reject) => {
-    let stdout = "";
-    let stderr = "";
-
-    const child = spawnProcess("copilot", args, {
-      cwd,
-      env: options.env ?? process.env,
-      stdio: ["ignore", "pipe", "pipe"],
-      windowsHide: true
-    });
-
-    child.stdout.on("data", (chunk) => {
-      stdout += chunk;
-      if (options.onProgress) {
-        const lines = chunk.toString().split(/\r?\n/).filter(Boolean);
-        for (const line of lines) {
-          if (!isEphemeralEvent(line)) {
-            options.onProgress({ message: line, phase: "running" });
-          }
-        }
-      }
-    });
-
-    child.stderr.on("data", (chunk) => {
-      stderr += chunk;
-    });
-
-    child.on("error", reject);
-    child.on("close", (code) => {
-      const sessionId = options.outputFormat === "json" ? tryExtractSessionId(stdout) : null;
-      const finalMessage = options.outputFormat === "json" ? extractAssistantMessage(stdout) : stdout;
-      resolve({
-        status: code ?? 0,
-        stdout,
-        stderr,
-        finalMessage,
-        sessionId,
-        error: null,
-        pid: child.pid
-      });
-    });
-  });
-}
-
 export async function runCopilotReview(cwd, options = {}) {
   const availability = getCopilotAvailability(cwd);
   if (!availability.available) {
     throw new Error("Copilot CLI is not installed. Install it from https://github.com/features/copilot/cli, then rerun `/copilot:setup`.");
   }
 
-  return runCopilotAsync(cwd, {
+  return runCopilotAcp(cwd, {
     prompt: options.prompt,
-    model: "gpt-5.4",
-    effort: "xhigh",
+    model: options.model ?? "gpt-5.4",
+    effort: options.effort ?? "xhigh",
     allowTools: ["shell(git:*)"],
     allowAllPaths: true,
-    outputFormat: options.structured ? "json" : undefined,
-    onProgress: options.onProgress
+    onProgress: options.onProgress,
   });
 }
 
@@ -232,8 +130,7 @@ export async function runCopilotTask(cwd, options = {}) {
     prompt: options.prompt,
     model: options.model,
     effort: options.effort,
-    outputFormat: options.outputFormat,
-    onProgress: options.onProgress
+    onProgress: options.onProgress,
   };
 
   if (options.resumeSessionId) {
@@ -250,7 +147,7 @@ export async function runCopilotTask(cwd, options = {}) {
     copilotOptions.allowAllPaths = true;
   }
 
-  return runCopilotAsync(cwd, copilotOptions);
+  return runCopilotAcp(cwd, copilotOptions);
 }
 
 export function parseStructuredOutput(rawOutput, fallback = {}) {

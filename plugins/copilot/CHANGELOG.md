@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0
+
+- Remove legacy CLI fallback; Copilot CLI with `--acp` support is now required
+- Drop `checkAcpSupport` runtime probe and all JSONL parsing helpers (~200 lines removed)
+
+## 1.2.0
+
+- Migrate task and review execution to ACP (JSON-RPC 2.0 over stdio) when `copilot --acp` is available; fall back to legacy CLI for older installs
+- Fix potential process hang on unexpected child exit by draining pending ACP requests in the exit handler
+- Drain stderr pipe and add stdin error handler to prevent child process deadlocks on auth failure or early exit
+
 ## 1.1.3
 
 - Fix `/copilot:review` no longer emits `[copilot]` progress lines; only the final result is printed to stdout
