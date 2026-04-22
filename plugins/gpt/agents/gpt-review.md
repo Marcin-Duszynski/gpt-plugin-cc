@@ -1,7 +1,7 @@
 ---
 name: gpt-review
 description: Run a GPT-5.4 code review via the Copilot CLI
-model: haiku
+model: sonnet
 tools: Bash
 ---
 
