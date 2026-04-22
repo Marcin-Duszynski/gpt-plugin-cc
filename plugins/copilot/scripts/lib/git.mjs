@@ -90,6 +90,22 @@ export function getRepoRoot(cwd) {
   return gitChecked(cwd, ["rev-parse", "--show-toplevel"]).stdout.trim();
 }
 
+export function resolvePrBaseRef(cwd, prNumber) {
+  const result = runCommand("gh", ["pr", "view", String(prNumber), "--json", "baseRefName", "--jq", ".baseRefName"], { cwd });
+  if (result.error && "code" in result.error && result.error.code === "ENOENT") {
+    throw new Error("gh CLI is not installed. Install it from https://cli.github.com and retry, or use --base <ref> instead of --pr.");
+  }
+  if (result.status !== 0) {
+    const detail = (result.stderr || result.stdout || "").trim();
+    throw new Error(`Failed to resolve PR #${prNumber}: ${detail || "unknown error"}. Verify the PR number and your gh auth status.`);
+  }
+  const baseRef = result.stdout.trim();
+  if (!baseRef) {
+    throw new Error(`PR #${prNumber} returned an empty base ref. Verify the PR exists and try --base <ref> instead.`);
+  }
+  return baseRef;
+}
+
 export function detectDefaultBranch(cwd) {
   const symbolic = git(cwd, ["symbolic-ref", "refs/remotes/origin/HEAD"]);
   if (symbolic.status === 0) {

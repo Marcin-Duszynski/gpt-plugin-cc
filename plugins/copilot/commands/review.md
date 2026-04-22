@@ -1,6 +1,6 @@
 ---
 description: Run a Copilot code review against local git state
-argument-hint: '[--wait|--background] [--base <ref>] [--scope auto|working-tree|branch]'
+argument-hint: '[--wait|--background] [--base <ref>|--pr <number>] [--scope auto|working-tree|branch]'
 disable-model-invocation: true
 allowed-tools: Bash(git:*), AskUserQuestion, Agent
 ---
@@ -19,6 +19,7 @@ Execution mode rules:
 - If the raw arguments include `--wait`, do not ask. Run the review in the foreground.
 - If the raw arguments include `--background`, do not ask. Run the review in a Claude background task.
 - Otherwise, estimate the review size before asking:
+  - For PR review (`--pr`), skip size estimation and recommend background (PR reviews are typically substantial).
   - For working-tree review, start with `git status --short --untracked-files=all`.
   - For working-tree review, also inspect both `git diff --shortstat --cached` and `git diff --shortstat`.
   - For base-branch review, use `git diff --shortstat <base>...HEAD`.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+
+- Add `--pr <number>` support to `/copilot:review` and `/copilot:adversarial-review` for PR-based reviews
+- Improve error handling to report stderr when Copilot CLI exits non-zero
+- Enhance shell argument escaping for focus text in adversarial-review commands
+
 ## 1.4.0
 
 - Add dedicated `copilot-review` and `copilot-adversarial-review` subagents for review delegation

@@ -15,7 +15,7 @@ import {
   runCopilotTask
 } from "./lib/copilot.mjs";
 import { readStdinIfPiped, readJsonFile } from "./lib/fs.mjs";
-import { collectReviewContext, ensureGitRepository, resolveReviewTarget } from "./lib/git.mjs";
+import { collectReviewContext, ensureGitRepository, resolvePrBaseRef, resolveReviewTarget } from "./lib/git.mjs";
 import { binaryAvailable, terminateProcessTree } from "./lib/process.mjs";
 import { loadPromptTemplate, interpolateTemplate } from "./lib/prompts.mjs";
 import {
@@ -575,7 +575,7 @@ function enqueueBackgroundTask(cwd, job, request) {
 
 async function handleReviewCommand(argv, config) {
   const { options, positionals } = parseCommandInput(argv, {
-    valueOptions: ["base", "scope", "model", "effort", "cwd"],
+    valueOptions: ["base", "scope", "model", "effort", "cwd", "pr"],
     booleanOptions: ["json", "background", "wait"],
     aliasMap: { m: "model" }
   });
@@ -583,7 +583,12 @@ async function handleReviewCommand(argv, config) {
   const cwd = resolveCommandCwd(options);
   const workspaceRoot = resolveCommandWorkspace(options);
   const focusText = positionals.join(" ").trim();
-  const target = resolveReviewTarget(cwd, { base: options.base, scope: options.scope });
+
+  if (options.pr && options.base) {
+    throw new Error("Use either --pr or --base, not both.");
+  }
+  const base = options.pr ? resolvePrBaseRef(cwd, options.pr) : options.base;
+  const target = resolveReviewTarget(cwd, { base, scope: options.scope });
 
   config.validateRequest?.(target, focusText);
   const metadata = buildReviewJobMetadata(config.reviewName, target);

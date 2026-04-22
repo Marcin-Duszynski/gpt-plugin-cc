@@ -1,6 +1,6 @@
 ---
 description: Run a Copilot review that challenges the implementation approach and design choices
-argument-hint: '[--wait|--background] [--base <ref>] [--scope auto|working-tree|branch] [focus ...]'
+argument-hint: '[--wait|--background] [--base <ref>|--pr <number>] [--scope auto|working-tree|branch] [focus ...]'
 disable-model-invocation: true
 allowed-tools: Bash(git:*), AskUserQuestion, Agent
 ---
@@ -22,6 +22,7 @@ Execution mode rules:
 - If the raw arguments include `--wait`, do not ask. Run in the foreground.
 - If the raw arguments include `--background`, do not ask. Run in a Claude background task.
 - Otherwise, estimate the review size before asking:
+  - For PR review (`--pr`), skip size estimation and recommend background (PR reviews are typically substantial).
   - For working-tree review, start with `git status --short --untracked-files=all`.
   - For working-tree review, also inspect both `git diff --shortstat --cached` and `git diff --shortstat`.
   - For base-branch review, use `git diff --shortstat <base>...HEAD`.
@@ -39,7 +40,7 @@ Argument handling:
 - Do not strip `--wait` or `--background` yourself.
 - Do not weaken the adversarial framing or rewrite the user's focus text.
 - `/copilot:adversarial-review` uses the same review target selection as `/copilot:review`.
-- It supports working-tree review, branch review, and `--base <ref>`.
+- It supports working-tree review, branch review, `--base <ref>`, and `--pr <number>` (resolves PR base via `gh`).
 - It does not support `--scope staged` or `--scope unstaged`.
 - Unlike `/copilot:review`, it can still take extra focus text after the flags.
 

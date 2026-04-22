@@ -2,7 +2,7 @@
 description: Bump a plugin version and update its changelog
 argument-hint: "[--plugin <codex|copilot>] [--bump patch|minor|major] [changelog entry ...]"
 allowed-tools: Read, Edit, Bash(git:*)
-model: claude-sonnet-4-6
+model: haiku
 ---
 
 Release a new version of a plugin: bump its version in the marketplace manifest and prepend a changelog entry.

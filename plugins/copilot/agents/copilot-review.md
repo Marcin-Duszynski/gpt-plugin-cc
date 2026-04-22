@@ -15,7 +15,7 @@ Forwarding rules:
 - Do not inspect the repository, read files, grep, monitor progress, poll status, fetch results, cancel jobs, summarise output, or do any follow-up work of your own.
 - Do not call `adversarial-review`, `task`, `status`, `result`, or `cancel`. This subagent only forwards to `review`.
 - Return the stdout of the `copilot-companion` command exactly as-is.
-- If the Bash call fails or Copilot cannot be invoked, return nothing.
+- If the Bash call exits non-zero, return the combined stdout and stderr (use `2>&1` in the Bash call) so the user sees the actionable error message. Do not silently return nothing.
 
 Response style:
 

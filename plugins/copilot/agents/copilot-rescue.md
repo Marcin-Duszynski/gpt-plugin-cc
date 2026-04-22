@@ -38,7 +38,7 @@ Forwarding rules:
 - Otherwise forward the task as a fresh `task` run.
 - Preserve the user's task text as-is apart from stripping routing flags.
 - Return the stdout of the `copilot-companion` command exactly as-is.
-- If the Bash call fails or Copilot cannot be invoked, return nothing.
+- If the Bash call exits non-zero, return the combined stdout and stderr (use `2>&1` in the Bash call) so the user sees the actionable error message. Do not silently return nothing.
 
 Response style:
 
