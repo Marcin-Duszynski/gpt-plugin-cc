@@ -11,7 +11,7 @@ Release a new version of a plugin: bump its version in the marketplace manifest 
 
 From `$ARGUMENTS`, extract:
 
-- `--plugin <name>` — optional. Must be `codex` or `copilot`. If omitted, autodetect (see below).
+- `--plugin <name>` — optional. Must match a plugin name in `plugins[]` in `.claude-plugin/marketplace.json`. If omitted, autodetect (see below).
 - `--bump <type>` — optional. One of `patch`, `minor`, `major`. If omitted, autodetect (see below).
 - Everything else is the changelog text. If omitted, autodetect (see below).
 
@@ -23,12 +23,11 @@ If `--plugin` is not supplied, run:
 git diff --name-only HEAD
 ```
 
-Collect the changed file paths. A file under `plugins/codex/` signals codex; a file under `plugins/copilot/` signals copilot.
+Collect the changed file paths. Any file under `plugins/<name>/` signals that plugin. Cross-reference against the `plugins[]` entries in `.claude-plugin/marketplace.json` to confirm `<name>` is a known plugin.
 
-- Only codex files changed → use `codex`
-- Only copilot files changed → use `copilot`
-- Both changed → stop and tell the user to specify `--plugin` explicitly
-- Neither changed → stop and tell the user to specify `--plugin` explicitly
+- Only one plugin's files changed → use that plugin name
+- Files from multiple plugins changed → stop and tell the user to specify `--plugin` explicitly
+- No plugin files changed → stop and tell the user to specify `--plugin` explicitly
 
 ## Autodetecting bump type and changelog entries
 
@@ -79,10 +78,10 @@ Read the diff and use it to fill in what was not supplied:
 
 5. **Commit**
 
-   Stage the two changed files and create a commit:
+   Stage all unstaged changes — the plugin source files, the marketplace manifest, and the changelog — then create a commit:
 
    ```bash
-   git add .claude-plugin/marketplace.json plugins/<plugin>/CHANGELOG.md
+   git add .claude-plugin/marketplace.json plugins/<plugin>/
    git commit -m "chore: release version <new-version> of <plugin> plugin"
    ```
 
