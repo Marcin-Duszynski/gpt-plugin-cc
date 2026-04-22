@@ -1,0 +1,7 @@
+{
+  "name": "gpt",
+  "description": "AI-crafted code reviews using GPT-5.4 via Copilot CLI.",
+  "author": {
+    "name": "Marcin Duszynski"
+  }
+}

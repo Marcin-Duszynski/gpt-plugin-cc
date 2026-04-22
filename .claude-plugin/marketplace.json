@@ -25,6 +25,15 @@
         "name": "GitHub"
       },
       "source": "./plugins/copilot"
+    },
+    {
+      "name": "gpt",
+      "description": "AI-crafted code reviews using GPT-5.4 via GitHub Copilot CLI.",
+      "version": "1.1.0",
+      "author": {
+        "name": "Marcin Duszynski"
+      },
+      "source": "./plugins/gpt"
     }
   ]
 }
