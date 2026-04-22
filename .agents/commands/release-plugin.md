@@ -77,6 +77,23 @@ Read the diff and use it to fill in what was not supplied:
 
    Leave all existing content intact below the new section.
 
-5. **Report**
+5. **Commit**
+
+   Stage the two changed files and create a commit:
+
+   ```bash
+   git add .claude-plugin/marketplace.json plugins/<plugin>/CHANGELOG.md
+   git commit -m "chore: release version <new-version> of <plugin> plugin"
+   ```
+
+6. **Push**
+
+   Push the commit to the remote:
+
+   ```bash
+   git push
+   ```
+
+7. **Report**
 
    Output a short summary: plugin name, old version → new version, and the changelog lines added.

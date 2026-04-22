@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+- Enhance review and task command output with structured summaries and next actions
+- Improve user guidance by highlighting key findings and recommended next steps
+
 ## 1.2.1
 
 - Clarify gpt:gpt-review and gpt:gpt-task output handling to avoid echoing already-visible results

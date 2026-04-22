@@ -20,4 +20,6 @@ Your job:
 
 3. Invoke the `gpt:gpt-task` subagent via the `Agent` tool (`subagent_type: "gpt:gpt-task"`), passing the enriched prompt as the task prompt.
 
-4. After the Agent tool call completes, do not repeat or echo the subagent's output. The tool result is already visible to the user in the UI. End your response with a single sentence confirming the review is complete.
+4. After the Agent tool call completes, do not repeat or echo the subagent's full output. Instead, return:
+   - A **short summary** (2-4 sentences) of what was done and any issues encountered
+   - A **Next actions** section listing what the user can do next (e.g. "Review the changes", "Run tests", "Commit the changes", "Run `/gpt:task` with a follow-up prompt")
