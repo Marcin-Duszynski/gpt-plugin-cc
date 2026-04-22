@@ -21,7 +21,7 @@ Your job:
 
 3. Invoke the `gpt:gpt-review` subagent via the `Agent` tool (`subagent_type: "gpt:gpt-review"`), passing the enriched prompt as the task prompt.
 
-4. Return the subagent's output verbatim, exactly as-is. Do not paraphrase, summarise, add commentary, or fix any issues mentioned in the review output.
+4. After the Agent tool call completes, do not repeat or echo the subagent's output. The tool result is already visible to the user in the UI. End your response with a single sentence confirming the review is complete.
 
 Core constraints:
 - This command is review-only. Do not fix issues, apply patches, or suggest that you are about to make changes.

@@ -20,4 +20,4 @@ Your job:
 
 3. Invoke the `gpt:gpt-task` subagent via the `Agent` tool (`subagent_type: "gpt:gpt-task"`), passing the enriched prompt as the task prompt.
 
-4. Return the subagent's output verbatim, exactly as-is. Do not paraphrase, summarise, add commentary, or modify the output in any way.
+4. After the Agent tool call completes, do not repeat or echo the subagent's output. The tool result is already visible to the user in the UI. End your response with a single sentence confirming the review is complete.

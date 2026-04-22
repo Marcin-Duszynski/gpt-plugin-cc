@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+
+- Clarify gpt:gpt-review and gpt:gpt-task output handling to avoid echoing already-visible results
+
 ## 1.2.0
 
 - Add gpt-task agent for delegating arbitrary tasks to GPT-5.4 via Copilot CLI
